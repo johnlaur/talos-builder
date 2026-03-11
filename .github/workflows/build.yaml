@@ -97,7 +97,7 @@ jobs:
             ASSET_TYPE=metal \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
             installer-pi5
-          mv ./checkouts/talos/_out/metal-arm64.raw.zst ./metal-arm64-rpi5.raw.zst
+          unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi5.raw.xz
 
       # ──────────────────────────────────────────────
       # Raspberry Pi 4 / CM4
@@ -138,7 +138,7 @@ jobs:
             ASSET_TYPE=metal \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
             installer-pi4
-          mv ./checkouts/talos/_out/metal-arm64.raw.zst ./metal-arm64-rpi4.raw.zst
+          unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi4.raw.xz
 
       # ──────────────────────────────────────────────
       # Release
@@ -165,14 +165,14 @@ jobs:
 
           | Platform | Disk image | Installer image |
           |----------|-----------|----------------|
-          | **RPi 5 / CM5** | \`metal-arm64-rpi5.raw.zst\` | \`${INSTALLER_PI5}\` |
-          | **RPi 4 / CM4** | \`metal-arm64-rpi4.raw.zst\` | \`${INSTALLER_PI4}\` |
+          | **RPi 5 / CM5** | \`metal-arm64-rpi5.raw.xz\` | \`${INSTALLER_PI5}\` |
+          | **RPi 4 / CM4** | \`metal-arm64-rpi4.raw.xz\` | \`${INSTALLER_PI4}\` |
 
           ### Fresh install
 
           Download the disk image for your board and flash it:
           \`\`\`bash
-          unzstd metal-arm64-rpi5.raw.zst   # or metal-arm64-rpi4.raw.zst
+          xz -d metal-arm64-rpi5.raw.xz   # or metal-arm64-rpi4.raw.xz
           dd if=metal-arm64-rpi5.raw of=<disk> bs=4M status=progress
           \`\`\`
 
@@ -190,7 +190,7 @@ jobs:
           )
           gh release create \
             ${{ github.ref_name }} \
-            metal-arm64-rpi5.raw.zst \
-            metal-arm64-rpi4.raw.zst \
+            metal-arm64-rpi5.raw.xz \
+            metal-arm64-rpi4.raw.xz \
             --title "${{ github.ref_name }}" \
             --notes "$NOTES"

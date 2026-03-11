@@ -26,11 +26,11 @@ Initial:
 
 ```bash
 # Raspberry Pi 5 / CM5
-unzstd metal-arm64-rpi5.raw.zst
+xz -d metal-arm64-rpi5.raw.xz
 dd if=metal-arm64-rpi5.raw of=<disk> bs=4M status=progress
 
 # Raspberry Pi 4 / CM4
-unzstd metal-arm64-rpi4.raw.zst
+xz -d metal-arm64-rpi4.raw.xz
 dd if=metal-arm64-rpi4.raw of=<disk> bs=4M status=progress
 ```
 
