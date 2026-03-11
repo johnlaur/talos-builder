@@ -1,6 +1,6 @@
-# Raspberry Pi 5 Talos Builder
+# Raspberry Pi 5 & Pi 4 Talos Builder
 
-This repository serves as the glue to build custom Talos images for the Raspberry Pi 5. It patches the Kernel and Talos build process to use the Linux Kernel source provided by [raspberrypi/linux](https://github.com/raspberrypi/linux).
+This repository builds custom Talos Linux images for the **Raspberry Pi 5** and **Raspberry Pi 4 / CM4**. It patches the Kernel and Talos build process to use the Linux Kernel source provided by [raspberrypi/linux](https://github.com/raspberrypi/linux).
 
 ## Tested on
 
@@ -18,24 +18,34 @@ So far, this release has been verified on:
 
 ## How to use?
 
-The releases on this repository align with the corresponding Talos version. There is a raw disk image (initial setup) and an installer image (upgrades) provided.
+Each release contains disk images and installer images for both Raspberry Pi 5 and Raspberry Pi 4 / CM4 platforms.
 
 ### Examples
 
 Initial:
 
 ```bash
-unzstd metal-arm64-rpi.raw.zst
-dd if=metal-arm64-rpi.raw of=<disk> bs=4M status=progress
-sync
+# Raspberry Pi 5 / CM5
+unzstd metal-arm64-rpi5.raw.zst
+dd if=metal-arm64-rpi5.raw of=<disk> bs=4M status=progress
+
+# Raspberry Pi 4 / CM4
+unzstd metal-arm64-rpi4.raw.zst
+dd if=metal-arm64-rpi4.raw of=<disk> bs=4M status=progress
 ```
 
 Upgrade:
 
 ```bash
+# Raspberry Pi 5 / CM5
 talosctl upgrade \
   --nodes <node IP> \
-  --image ghcr.io/talos-rpi5/installer:<version>
+  --image ghcr.io/talos-rpi5/installer:<version>-rpi5
+
+# Raspberry Pi 4 / CM4
+talosctl upgrade \
+  --nodes <node IP> \
+  --image ghcr.io/talos-rpi5/installer:<version>-rpi4
 ```
 
 ## Building
@@ -44,28 +54,38 @@ talosctl upgrade \
 
 The CI workflow builds and publishes images automatically. It is triggered when you push a version tag:
 
-- **Push a tag** matching `v*.*.*` — this triggers the full build and creates a GitHub Release:
+- **Push a tag** matching `v*.*.*` — this builds both Raspberry Pi 5 and Pi 4 / CM4 images and creates a GitHub Release:
   ```bash
-  git tag v1.11.5-cm5
-  git push origin v1.11.5-cm5
+  git tag v1.11.6
+  git push origin v1.11.6
   ```
 
 ### Local build
 
-If you'd like to make modifications, it is possible to create your own build. Bellow is an example of the standard build.
+If you'd like to make modifications, it is possible to create your own build.
 
 ```bash
-# Clones all dependencies and applies the necessary patches
-make checkouts patches
+# Full pipeline for Raspberry Pi 5
+make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> pi5
 
-# Builds the Linux Kernel (can take a while)
+# Full pipeline for Raspberry Pi 4 / CM4
+make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> pi4
+```
+
+Or step by step:
+
+```bash
+# Clone dependencies and apply patches
+make checkouts patches-pi5   # or patches-pi4
+
+# Build the Linux Kernel (can take a while)
 make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> kernel
 
-# Builds the overlay (U-Boot, dtoverlays ...)
+# Build the overlay (Pi5 only — Pi4 uses the stock siderolabs overlay)
 make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> overlay
 
-# Final step to build the installer and disk image
-make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> installer
+# Build the installer and disk image
+make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> installer-pi5   # or installer-pi4
 ```
 
 ### Extensions support
