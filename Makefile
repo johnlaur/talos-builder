@@ -18,6 +18,9 @@ CONFIG_TXT ?= dtparam=i2c_arm=on
 EXTENSIONS ?=
 EXTENSION_ARGS = $(foreach ext,$(EXTENSIONS),--system-extension-image $(ext))
 
+EXTRA_KERNEL_ARGS ?=
+EXTRA_KERNEL = $(foreach arg,$(EXTRA_KERNEL_ARGS),--extra-kernel-arg $(arg))
+
 PKG_REPOSITORY = https://github.com/siderolabs/pkgs.git
 TALOS_REPOSITORY = https://github.com/siderolabs/talos.git
 SBCOVERLAY_REPOSITORY = https://github.com/siderolabs/sbc-raspberrypi
@@ -142,7 +145,8 @@ image:
 			--overlay-name="rpi_5" \
 			--overlay-image="$(REGISTRY)/$(REGISTRY_USERNAME)/sbc-raspberrypi:$(SBCOVERLAY_TAG)" \
 			--overlay-option="configTxtAppend=$$CONFIG_TXT" \
-			$(EXTENSION_ARGS)
+			$(EXTENSION_ARGS) \
+			$(EXTRA_KERNEL)
 
 .PHONY: release
 release:
