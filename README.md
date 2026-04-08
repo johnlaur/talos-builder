@@ -1,6 +1,6 @@
-# Raspberry Pi 5 & Pi 4 Talos Builder
+# Raspberry Pi 5 Talos Builder
 
-This repository builds custom Talos Linux images for the **Raspberry Pi 5** and **Raspberry Pi 4 / CM4**. It patches the Kernel and Talos build process to use the Linux Kernel source provided by [raspberrypi/linux](https://github.com/raspberrypi/linux).
+This repository builds custom Talos Linux images for the **Raspberry Pi 5**. It patches the Kernel and Talos build process to use the Linux Kernel source provided by [raspberrypi/linux](https://github.com/raspberrypi/linux).
 
 ## Tested on
 
@@ -18,7 +18,7 @@ So far, this release has been verified on:
 
 ## How to use?
 
-Each release contains disk images and installer images for both Raspberry Pi 5 and Raspberry Pi 4 / CM4 platforms.
+Each release contains disk images and installer images for the Raspberry Pi 5 platforms.
 
 ### Examples
 
@@ -28,10 +28,6 @@ Initial:
 # Raspberry Pi 5 / CM5
 xz -d metal-arm64-rpi5.raw.xz
 dd if=metal-arm64-rpi5.raw of=<disk> bs=4M status=progress
-
-# Raspberry Pi 4 / CM4
-xz -d metal-arm64-rpi4.raw.xz
-dd if=metal-arm64-rpi4.raw of=<disk> bs=4M status=progress
 ```
 
 Upgrade:
@@ -41,11 +37,6 @@ Upgrade:
 talosctl upgrade \
   --nodes <node IP> \
   --image ghcr.io/talos-rpi5/installer:<version>-rpi5
-
-# Raspberry Pi 4 / CM4
-talosctl upgrade \
-  --nodes <node IP> \
-  --image ghcr.io/talos-rpi5/installer:<version>-rpi4
 ```
 
 ## Building
@@ -54,10 +45,10 @@ talosctl upgrade \
 
 The CI workflow builds and publishes images automatically. It is triggered when you push a version tag:
 
-- **Push a tag** matching `v*.*.*` — this builds both Raspberry Pi 5 and Pi 4 / CM4 images and creates a GitHub Release:
+- **Push a tag** matching `v*.*.*` — this builds the Raspberry Pi 5 image and creates a GitHub Release:
   ```bash
-  git tag v1.11.6
-  git push origin v1.11.6
+  git tag v1.12.6
+  git push origin v1.12.6
   ```
 
 ### Local build
@@ -67,16 +58,13 @@ If you'd like to make modifications, it is possible to create your own build.
 ```bash
 # Full pipeline for Raspberry Pi 5
 make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> pi5
-
-# Full pipeline for Raspberry Pi 4 / CM4
-make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> pi4
 ```
 
 Or step by step:
 
 ```bash
 # Clone dependencies and apply patches
-make checkouts patches-pi5   # or patches-pi4
+make checkouts patches
 
 # Build the Linux Kernel (can take a while)
 make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> kernel
@@ -85,7 +73,7 @@ make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> kernel
 make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> overlay
 
 # Build the installer and disk image
-make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> installer-pi5   # or installer-pi4
+make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> installer
 ```
 
 ### Extensions support
@@ -122,7 +110,7 @@ DIGEST=$(crane digest ghcr.io/siderolabs/foo-extension:v1.0.0)
 
 make REGISTRY=ghcr.io REGISTRY_USERNAME=<username> \
   EXTENSIONS="ghcr.io/siderolabs/foo-extension:v1.0.0@${DIGEST}" \
-  installer-pi5
+  installer
 ```
 
 Pass multiple extensions as a space-separated string inside the quotes.

@@ -60,7 +60,7 @@ jobs:
       # ──────────────────────────────────────────────
 
       - name: "Pi5 — Prepare (checkouts & patches)"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} checkouts patches-pi5
+        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} checkouts patches
 
       - name: "Pi5 — Kernel"
         run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kernel
@@ -84,10 +84,10 @@ jobs:
             REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
             ASSET_TYPE=installer \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer-pi5
+            installer
           crane push \
             ./checkouts/talos/_out/installer-arm64.tar \
-            ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi5
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}
 
       - name: "Pi5 — Build metal disk image"
         run: |
@@ -96,49 +96,8 @@ jobs:
             REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
             ASSET_TYPE=metal \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer-pi5
+            installer
           unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi5.raw.xz
-
-      # ──────────────────────────────────────────────
-      # Raspberry Pi 4 / CM4
-      # ──────────────────────────────────────────────
-
-      - name: "Pi4 — Prepare (clean, re-checkout & patches)"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} checkouts-clean checkouts patches-pi4
-
-      - name: "Pi4 — Kernel"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kernel
-
-      - name: "Pi4 — Kernel initramfs"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kern_initramfs
-
-      - name: "Pi4 — Installer base"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} installer-base
-
-      - name: "Pi4 — Imager"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} imager
-
-      - name: "Pi4 — Build installer image (with extensions)"
-        run: |
-          make TALOS_VERSION=${{ env.TALOS_VERSION }} \
-            REGISTRY=${{ env.REGISTRY }} \
-            REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
-            ASSET_TYPE=installer \
-            EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer-pi4
-          crane push \
-            ./checkouts/talos/_out/installer-arm64.tar \
-            ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi4
-
-      - name: "Pi4 — Build metal disk image"
-        run: |
-          make TALOS_VERSION=${{ env.TALOS_VERSION }} \
-            REGISTRY=${{ env.REGISTRY }} \
-            REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
-            ASSET_TYPE=metal \
-            EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer-pi4
-          unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi4.raw.xz
 
       # ──────────────────────────────────────────────
       # Release
@@ -149,12 +108,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          INSTALLER_PI5="${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi5"
-          INSTALLER_PI4="${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi4"
+          INSTALLER_PI5="${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}"
           NOTES=$(cat <<EOF
           > ⚠️ Experimental build, use at your own risk.
 
-          Patched Talos Linux for **Raspberry Pi 5** and **Raspberry Pi 4 / CM4**, including NVMe, NIC and USB support.
+          Patched Talos Linux for **Raspberry Pi 5**, including NVMe, NIC and USB support.
 
           ### Extensions included
 
@@ -166,13 +124,12 @@ jobs:
           | Platform | Disk image | Installer image |
           |----------|-----------|----------------|
           | **RPi 5 / CM5** | \`metal-arm64-rpi5.raw.xz\` | \`${INSTALLER_PI5}\` |
-          | **RPi 4 / CM4** | \`metal-arm64-rpi4.raw.xz\` | \`${INSTALLER_PI4}\` |
 
           ### Fresh install
 
           Download the disk image for your board and flash it:
           \`\`\`bash
-          xz -d metal-arm64-rpi5.raw.xz   # or metal-arm64-rpi4.raw.xz
+          xz -d metal-arm64-rpi5.raw.xz
           dd if=metal-arm64-rpi5.raw of=<disk> bs=4M status=progress
           \`\`\`
 
@@ -182,15 +139,10 @@ jobs:
           # Raspberry Pi 5
           talosctl upgrade --nodes <NODE_IP> --image ${INSTALLER_PI5}
 
-          # Raspberry Pi 4 / CM4
-          talosctl upgrade --nodes <NODE_IP> --image ${INSTALLER_PI4}
-          \`\`\`
-
           EOF
           )
           gh release create \
             ${{ github.ref_name }} \
             metal-arm64-rpi5.raw.xz \
-            metal-arm64-rpi4.raw.xz \
             --title "${{ github.ref_name }}" \
             --notes "$NOTES"
