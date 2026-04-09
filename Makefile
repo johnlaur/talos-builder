@@ -1,12 +1,12 @@
-PKG_VERSION = v1.12.0
-TALOS_VERSION = v1.12.6
-SBCOVERLAY_VERSION = v0.2.0
+PKG_VERSION := v1.12.0
+TALOS_VERSION := v1.12.6
+SBCOVERLAY_VERSION := v0.2.0
 
 PUSH ?= true
 REGISTRY ?= ghcr.io
 
 ifndef RPI_MODEL
-RPI_MODEL = rpi5
+RPI_MODEL := rpi5
 endif
 REGISTRY_USERNAME ?= talos-$(RPI_MODEL)
 TAG ?= $(shell git describe --tags --exact-match)
@@ -16,39 +16,39 @@ ASSET_TYPE ?= rpi_5
 CONFIG_TXT ?= dtparam=i2c_arm=on
 
 EXTENSIONS ?=
-EXTENSION_ARGS = $(foreach ext,$(EXTENSIONS),--system-extension-image $(ext))
+EXTENSION_ARGS := $(foreach ext,$(EXTENSIONS),--system-extension-image $(ext))
 
 EXTRA_KERNEL_ARGS ?=
-EXTRA_KERNEL = $(foreach arg,$(EXTRA_KERNEL_ARGS),--extra-kernel-arg $(arg))
+EXTRA_KERNEL := $(foreach arg,$(EXTRA_KERNEL_ARGS),--extra-kernel-arg $(arg))
 
-PKG_REPOSITORY = https://github.com/siderolabs/pkgs.git
-TALOS_REPOSITORY = https://github.com/siderolabs/talos.git
-SBCOVERLAY_REPOSITORY = https://github.com/siderolabs/sbc-raspberrypi
+PKG_REPOSITORY := https://github.com/siderolabs/pkgs.git
+TALOS_REPOSITORY := https://github.com/siderolabs/talos.git
+SBCOVERLAY_REPOSITORY := https://github.com/siderolabs/sbc-raspberrypi
 
 CHECKOUTS_DIRECTORY := $(PWD)/checkouts
 PATCHES_DIRECTORY := $(PWD)/patches
 
-PKGS_TAG = $(shell cd $(CHECKOUTS_DIRECTORY)/pkgs && git describe --tag --always --dirty --match v[0-9]\*)
-TALOS_TAG = $(shell cd $(CHECKOUTS_DIRECTORY)/talos && git describe --tag --always --dirty --match v[0-9]\*)
-SBCOVERLAY_TAG = $(shell cd $(CHECKOUTS_DIRECTORY)/sbc-raspberrypi && git describe --tag --always --dirty --match v[0-9]\*)
+PKGS_TAG ?= $(shell cd $(CHECKOUTS_DIRECTORY)/pkgs && git describe --tag --always --dirty --match v[0-9]\*)
+TALOS_TAG ?= $(or ${TAG}, $(shell cd $(CHECKOUTS_DIRECTORY)/talos && git describe --tag --always --dirty --match v[0-9]\*))
+SBCOVERLAY_TAG ?= $(shell cd $(CHECKOUTS_DIRECTORY)/sbc-raspberrypi && git describe --tag --always --dirty --match v[0-9]\*)
 
 #
 # Help
 #
 .PHONY: help
 help:
-	@echo "checkouts      : Clone repositories required for the build"
-	@echo "patches        : Apply all patches for Raspberry Pi 5"
-	@echo "kernel         : Build kernel"
-	@echo "overlay        : Build Raspberry Pi 5 overlay"
-	@echo "imager         : Build imager docker image"
-	@echo "installer-base : Build installer-base docker image"
-	@echo "kern_initramfs : Build kernel and initramfs"
-	@echo "installer      : Build installer"
-	@echo "image          : Build disk image for Raspberry Pi 5"
-	@echo "pi5            : Full build pipeline for Raspberry Pi 5"
-	@echo "release        : Use only when building the final release, this will tag relevant images with the current Git tag."
-	@echo "clean          : Clean up any remains"
+	@echo "checkouts        : Clone repositories required for the build"
+	@echo "patches          : Apply all patches for Raspberry Pi 5"
+	@echo "kernel           : Build kernel"
+	@echo "overlay          : Build Raspberry Pi 5 overlay"
+	@echo "imager           : Build imager docker image"
+	@echo "installer-base   : Build installer-base docker image"
+	@echo "initramfs-kernel : Build kernel and initramfs"
+	@echo "installer        : Build installer"
+	@echo "image            : Build disk image for Raspberry Pi 5"
+	@echo "pi5              : Full build pipeline for Raspberry Pi 5"
+	@echo "release          : Use only when building the final release, this will tag relevant images with the current Git tag."
+	@echo "clean            : Clean up any remains"
 
 #
 # Checkouts
@@ -122,14 +122,14 @@ installer-base:
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
 			installer-base
 
-.PHONY: kern_initramfs
-kern_initramfs:
+.PHONY: initramfs-kernel
+initramfs-kernel:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
-			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
+			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) \
 			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
-			kernel initramfs
+			initramfs kernel
 
 .PHONY: installer
 installer:
@@ -160,7 +160,7 @@ release:
 		docker push $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TAG)
 
 .PHONY: pi5
-pi5: checkouts-clean checkouts patches kernel kern_initramfs installer-base imager overlay installer image
+pi5: checkouts-clean checkouts patches kernel initramfs-kernel installer-base imager overlay installer image
 
 .PHONY: clean
 clean: checkouts-clean

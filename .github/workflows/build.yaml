@@ -65,8 +65,8 @@ jobs:
       - name: "Pi5 — Kernel"
         run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kernel
 
-      - name: "Pi5 — Kernel initramfs"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kern_initramfs
+      - name: "Pi5 — initramfs and kernel"
+        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} initramfs-kernels
 
       - name: "Pi5 — Installer base"
         run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} installer-base
@@ -112,7 +112,7 @@ jobs:
           NOTES=$(cat <<EOF
           > ⚠️ Experimental build, use at your own risk.
 
-          Patched Talos Linux for **Raspberry Pi 5**, including NVMe, NIC and USB support.
+          Patched Talos Linux for **Raspberry Pi 5** using Pi Foundation vendor kernel
 
           ### Extensions included
 
