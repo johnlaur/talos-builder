@@ -4,11 +4,7 @@ SBCOVERLAY_VERSION := v0.2.0
 
 PUSH ?= true
 REGISTRY ?= ghcr.io
-
-ifndef RPI_MODEL
-RPI_MODEL := rpi5
-endif
-REGISTRY_USERNAME ?= talos-$(RPI_MODEL)
+REGISTRY_USERNAME ?= talos-rpi5
 TAG ?= $(shell git describe --tags --exact-match)
 
 SED ?= sed
@@ -108,7 +104,7 @@ overlay:
 imager:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
-			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
+			TAG=${TALOS_TAG} REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
 			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
 			imager
@@ -117,7 +113,7 @@ imager:
 installer-base:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
-			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
+			TAG=${TALOS_TAG} REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
 			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
 			installer-base
@@ -126,7 +122,7 @@ installer-base:
 initramfs-kernel:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
-			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) \
+			TAG=${TALOS_TAG} REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) \
 			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
 			initramfs kernel
@@ -135,7 +131,7 @@ initramfs-kernel:
 installer:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
-			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
+			TAG=${TALOS_TAG} REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
 			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
 			installer
