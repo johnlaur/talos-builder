@@ -5,7 +5,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  REGISTRY_USERNAME: ${{ github.repository_owner }}
+  REGISTRY_USERNAME: ${{ github.repository_owner }}/talos-builder
   # Extensions to bake into the installer image.
   # Format: space-separated list of image:tag references (digests resolved at build time).
   EXTENSION_ISCSI_IMAGE: ghcr.io/siderolabs/iscsi-tools:v0.2.0
@@ -66,7 +66,7 @@ jobs:
         run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kernel
 
       - name: "Pi5 — initramfs and kernel"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} initramfs-kernels
+        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} initramfs-kernel
 
       - name: "Pi5 — Installer base"
         run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} installer-base
@@ -84,20 +84,19 @@ jobs:
             REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
             ASSET_TYPE=installer \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer
+            image
           crane push \
             ./checkouts/talos/_out/installer-arm64.tar \
-            ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-arm64-extensions
 
       - name: "Pi5 — Build metal disk image"
         run: |
           make TALOS_VERSION=${{ env.TALOS_VERSION }} \
             REGISTRY=${{ env.REGISTRY }} \
             REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
-            ASSET_TYPE=metal \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer
-          unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi5.raw.xz
+            image
+          mv ./checkouts/talos/_out/metal-arm64.raw.xz ./metal-arm64-rpi5.raw.xz
 
       # ──────────────────────────────────────────────
       # Release
